@@ -27,44 +27,53 @@
 
         public static string ImportPlays(TheatreContext context, string xmlString)
         {
+            //using Data Transfer Object Class to map it with plays
             var serializer = new XmlSerializer(typeof(ImportPLaysDTO[]), new XmlRootAttribute("Plays"));
+
+            //Deserialize method needs TextReader object to convert/map 
             using StringReader inputReader = new StringReader(xmlString);
             var playsArrayDTOs = (ImportPLaysDTO[])serializer.Deserialize(inputReader);
 
+            //using StringBuilder to gather all info in one string
             StringBuilder sb = new StringBuilder();
+
+            //creating List where all valid plays can be kept
             List<Play> playsXML = new List<Play>();
 
+            //creating List where all valid genres can be kept
             List<string> validGenres = new List<string> { "Drama", "Comedy", "Romance", "Musical" };
 
             foreach (ImportPLaysDTO playDTO in playsArrayDTOs)
             {
-                TimeSpan duration;
-                
+                //validating duration of plays in given xml
+                TimeSpan duration;                
                 if (!TimeSpan.TryParseExact(playDTO.Duration, "c", CultureInfo.InvariantCulture, TimeSpanStyles.None, out duration))
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
 
+                //validating info for play from data
                 if (!IsValid(playDTO) || duration.TotalHours < 1)
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
 
+                //checking for duplicates
                 if (!validGenres.Contains(playDTO.Genre))
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
-                
 
+                //creating a valid play
                 Play playToAdd = new Play
                 {
                     Title = playDTO.Title,
                     Duration = duration,
                     Rating = playDTO.Raiting,
-                    Genre = (Genre)Enum.Parse(typeof(Genre), playDTO.Genre), //!!!!!!!!!!!!!!!!!
+                    Genre = (Genre)Enum.Parse(typeof(Genre), playDTO.Genre), //
                     Description = playDTO.Description,
                     Screenwriter = playDTO.Screenwriter
                 };
