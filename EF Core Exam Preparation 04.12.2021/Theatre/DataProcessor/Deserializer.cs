@@ -73,7 +73,7 @@
                     Title = playDTO.Title,
                     Duration = duration,
                     Rating = playDTO.Raiting,
-                    Genre = (Genre)Enum.Parse(typeof(Genre), playDTO.Genre), //
+                    Genre = (Genre)Enum.Parse(typeof(Genre), playDTO.Genre), //using "Parse" method to parse string enum "Genre"
                     Description = playDTO.Description,
                     Screenwriter = playDTO.Screenwriter
                 };
@@ -85,31 +85,41 @@
 
             context.Plays.AddRange(playsXML);
 
+            //actual importing info from data
             context.SaveChanges();
 
+            //using TrimEnd() to get rid of white spaces
             return sb.ToString().TrimEnd();
         }
 
         public static string ImportCasts(TheatreContext context, string xmlString)
         {
+            //using Data Transfer Object Class to map it with casts
             var serializer = new XmlSerializer(typeof(ImportCastDTO[]), new XmlRootAttribute("Casts"));
+
+            //Deserialize method needs TextReader object to convert/map
             using StringReader inputReader = new StringReader(xmlString);
             var castsArrayDTOs = (ImportCastDTO[])serializer.Deserialize(inputReader);
 
+            //using StringBuilder to gather all info in one string
             StringBuilder sb = new StringBuilder();
+
+            //creating List where all valid casts can be kept
             List<Cast> castsXML = new List<Cast>();
 
             foreach (ImportCastDTO castDTO in castsArrayDTOs)
             {
-
+                //validating info for cast from data
                 if (!IsValid(castDTO))
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
 
+                //creating a valid cast
                 Cast castToAdd = new Cast
                 {
+                    //using identical properties in order to map successfully
                     FullName = castDTO.FullName,
                     IsMainCharacter = bool.Parse(castDTO.IsMainCharacter),
                     PhoneNumber = castDTO.PhoneNumber,
@@ -134,44 +144,52 @@
 
             context.Casts.AddRange(castsXML);
 
+            //actual importing info from data
             context.SaveChanges();
 
+            //using TrimEnd() to get rid of white spaces
             return sb.ToString().TrimEnd();
         }
 
         public static string ImportTtheatersTickets(TheatreContext context, string jsonString)
         {
+            //using Data Transfer Object Class to map it with theatres
             var theatresArray = JsonConvert.DeserializeObject<ImportTheatreDTO[]>(jsonString);
 
+            //using StringBuilder to gather all info in one string
             StringBuilder sb = new StringBuilder();
+
+            //creating List where all valid theatres can be kept
             List<Theatre> theatresList = new List<Theatre>();
 
             foreach (ImportTheatreDTO theatreDTO in theatresArray)
             {
-
+                //validating info for theatre from data
                 if (!IsValid(theatreDTO))
                 {
                     sb.AppendLine(ErrorMessage);
                     continue;
                 }
 
+                //creating a valid theatre
                 Theatre theatreToAdd = new Theatre()
                 {
+                    //using identical properties in order to map successfully
                     Name = theatreDTO.Name,
                     NumberOfHalls = theatreDTO.NumberOfHalls,
                     Director = theatreDTO.Director
                 };
 
-
-
                 foreach (var ticketDTO in theatreDTO.Tickets)
                 {
+                    //validating info for theatre from data
                     if (!IsValid(ticketDTO))
                     {
                         sb.AppendLine(ErrorMessage);
                         continue;
                     }
 
+                    //creating a valid ticket
                     Ticket ticketToAdd = new Ticket()
                     {
                         Price = ticketDTO.Price,
@@ -179,6 +197,7 @@
                         PlayId = ticketDTO.PlayId
                     };
 
+                    //adding valid ticket
                     theatreToAdd.Tickets.Add(ticketToAdd);
 
                 }
@@ -188,8 +207,11 @@
             }
 
             context.Theatres.AddRange(theatresList);
+
+            //actual importing info from data
             context.SaveChanges();
 
+            //using TrimEnd() to get rid of white spaces
             return sb.ToString().TrimEnd();
         }
 
